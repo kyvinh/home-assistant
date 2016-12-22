@@ -1,0 +1,37 @@
+{
+  "id": "4a6d0d63-e539-4636-9d14-73b4e1de5f42",
+  "timestamp": "2016-12-22T09:25:18.132Z",
+  "result": {
+    "source": "agent",
+    "resolvedQuery": "let me listen to some music",
+    "action": "scene.activate",
+    "actionIncomplete": false,
+    "parameters": {
+      "scene": "romantic",
+      "tvshow": ""
+    },
+    "contexts": [],
+    "metadata": {
+      "intentId": "76f1f870-56df-42d6-906c-2c851e6d4f5a",
+      "webhookUsed": "true",
+      "webhookForSlotFillingUsed": "false",
+      "intentName": "Activate scene"
+    },
+    "fulfillment": {
+      "speech": "",
+      "messages": [
+        {
+          "type": 0,
+          "speech": ""
+        }
+      ]
+    },
+    "score": 1
+  },
+  "status": {
+    "code": 206,
+    "errorType": "partial_content",
+    "errorDetails": "Webhook call failed. Error message: org.springframework.web.client.ResourceAccessException: I/O error on POST request for \"https://nas.gladdys.be:8123/api/websocket-apiai\":Connection refused; nested exception is java.net.ConnectException: Connection refused ErrorId: 025909e2-b1c7-47d9-8f88-48440f26f9b7"
+  },
+  "sessionId": "89adfecd-da80-4bae-a9a4-2999e902a17b"
+}
