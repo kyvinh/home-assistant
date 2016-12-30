@@ -46,24 +46,37 @@ class APIAIWebhookView(HomeAssistantView):
         # TODO Catch AttributeError: 'NoneType' object has no attribute 'get'
         #      in case there was a problem with the JSON response
 
-        if data.get('result').get('action') == 'scene.activate':
+        changed_states = []
+
+        action = data.get('result').get('action')
+        if action == 'scene.activate':
             scene_to_activate = data.get('result').get('parameters').get('scene')
-            _LOGGER.info('Activating scene %s', scene_to_activate)
+            _LOGGER.info('Activating scene: %s', scene_to_activate)
             if scene_to_activate:
+                result['speech'] = "Activating scene: {}".format(scene_to_activate)
                 with AsyncTrackStates(hass) as changed_states:
                     yield from hass.services.async_call(
                         'scene', SERVICE_TURN_ON, {ATTR_ENTITY_ID: 'scene.' + scene_to_activate}, True)
-                result['data'] = self.json(changed_states)
             else:
                 _LOGGER.warning('Could not process api.ai request: scene.activate called without scene name')
+        elif action == 'appliance.turn_on':
+            appliance = data.get('result').get('parameters').get('appliance')
+            _LOGGER.info('Turning on appliance: %s', appliance)
+            if appliance:
+                result['speech'] = "Turning on: {}.".format(appliance)
+                with AsyncTrackStates(hass) as changed_states:
+                    yield from hass.services.async_call(
+                        'homeassistant', SERVICE_TURN_ON, {ATTR_ENTITY_ID: 'lights.' + appliance}, True)
+            else:
+                _LOGGER.warning('Could not process api.ai request: turn on appliance called without appliance name')
 
-        result['data'] = []
+        result['messages'] = []
         for state in changed_states:
-            changed_state_string = 'Changed state: {} ({}) is now "{}"'.format(state.attributes[ATTR_FRIENDLY_NAME], state.entity_id, state.state)
+            changed_state_string = 'Changed state: {} ({}) is now "{}"'\
+                .format(state.attributes[ATTR_FRIENDLY_NAME], state.entity_id, state.state)
             _LOGGER.info(changed_state_string)
-            result['data'].append(changed_state_string)
+            result['messages'].append(changed_state_string)
 
         # TODO ALSO CATCH MISC. ERRORS!
 
-        result['speech'] = "Request has been processed."
         return self.json(result)
