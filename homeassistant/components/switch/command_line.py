@@ -146,6 +146,8 @@ class CommandSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        if (self._state = True)
+            return
         if (CommandSwitch._switch(self._command_on) and
                 not self._command_state):
             self._state = True
@@ -153,6 +155,8 @@ class CommandSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        if (self._state = False)
+            return
         if (CommandSwitch._switch(self._command_off) and
                 not self._command_state):
             self._state = False
