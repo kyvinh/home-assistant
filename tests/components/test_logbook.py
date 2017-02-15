@@ -25,7 +25,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
-        self.hass.config.components += ['frontend', 'recorder', 'api']
+        self.hass.config.components |= set(['frontend', 'recorder', 'api'])
         with patch('homeassistant.components.logbook.'
                    'register_built_in_panel'):
             assert setup_component(self.hass, logbook.DOMAIN,
@@ -116,6 +116,50 @@ class TestComponentLogbook(unittest.TestCase):
         entries = list(logbook.humanify((eventA,)))
 
         self.assertEqual(0, len(entries))
+
+    def test_exclude_new_entities(self):
+        """Test if events are excluded on first update."""
+        entity_id = 'sensor.bla'
+        entity_id2 = 'sensor.blu'
+        pointA = dt_util.utcnow()
+        pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+        eventA.data['old_state'] = None
+
+        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
+                                          eventA, eventB), self.EMPTY_CONFIG)
+        entries = list(logbook.humanify(events))
+
+        self.assertEqual(2, len(entries))
+        self.assert_entry(
+            entries[0], name='Home Assistant', message='stopped',
+            domain=ha.DOMAIN)
+        self.assert_entry(
+            entries[1], pointB, 'blu', domain='sensor', entity_id=entity_id2)
+
+    def test_exclude_removed_entities(self):
+        """Test if events are excluded on last update."""
+        entity_id = 'sensor.bla'
+        entity_id2 = 'sensor.blu'
+        pointA = dt_util.utcnow()
+        pointB = pointA + timedelta(minutes=logbook.GROUP_BY_MINUTES)
+
+        eventA = self.create_state_changed_event(pointA, entity_id, 10)
+        eventB = self.create_state_changed_event(pointB, entity_id2, 20)
+        eventA.data['new_state'] = None
+
+        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
+                                          eventA, eventB), self.EMPTY_CONFIG)
+        entries = list(logbook.humanify(events))
+
+        self.assertEqual(2, len(entries))
+        self.assert_entry(
+            entries[0], name='Home Assistant', message='stopped',
+            domain=ha.DOMAIN)
+        self.assert_entry(
+            entries[1], pointB, 'blu', domain='sensor', entity_id=entity_id2)
 
     def test_exclude_events_hidden(self):
         """Test if events are excluded if entity is hidden."""

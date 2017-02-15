@@ -1,3 +1,4 @@
+"""Tests for the Home Assistant Websocket API."""
 import asyncio
 from unittest.mock import patch
 
@@ -213,7 +214,7 @@ def test_subscribe_unsubscribe_events(hass, websocket_client):
 
 @asyncio.coroutine
 def test_get_states(hass, websocket_client):
-    """ Test get_states command."""
+    """Test get_states command."""
     hass.states.async_set('greeting.hello', 'world')
     hass.states.async_set('greeting.bye', 'universe')
 
@@ -239,7 +240,7 @@ def test_get_states(hass, websocket_client):
 
 @asyncio.coroutine
 def test_get_services(hass, websocket_client):
-    """ Test get_services command."""
+    """Test get_services command."""
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_SERVICES,
@@ -254,7 +255,7 @@ def test_get_services(hass, websocket_client):
 
 @asyncio.coroutine
 def test_get_config(hass, websocket_client):
-    """ Test get_config command."""
+    """Test get_config command."""
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_CONFIG,
@@ -264,12 +265,16 @@ def test_get_config(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
+
+    if 'components' in msg['result']:
+        msg['result']['components'] = set(msg['result']['components'])
+
     assert msg['result'] == hass.config.as_dict()
 
 
 @asyncio.coroutine
 def test_get_panels(hass, websocket_client):
-    """ Test get_panels command."""
+    """Test get_panels command."""
     frontend.register_built_in_panel(hass, 'map', 'Map',
                                      'mdi:account-location')
 
@@ -287,7 +292,7 @@ def test_get_panels(hass, websocket_client):
 
 @asyncio.coroutine
 def test_ping(websocket_client):
-    """ Test get_panels command."""
+    """Test get_panels command."""
     websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_PING,

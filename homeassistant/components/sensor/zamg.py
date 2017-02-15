@@ -35,7 +35,8 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 VALID_STATION_IDS = (
     '11010', '11012', '11022', '11035', '11036', '11101', '11121', '11126',
-    '11130', '11150', '11155', '11157', '11171', '11190', '11204'
+    '11130', '11150', '11155', '11157', '11171', '11190', '11204', '11240',
+    '11244', '11265', '11331', '11343', '11389'
 )
 
 SENSOR_TYPES = {
@@ -111,7 +112,7 @@ class ZamgSensor(Entity):
         return SENSOR_TYPES[self.variable][1]
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,

@@ -66,7 +66,7 @@ class GoogleCalendarData(object):
         """Get the latest data."""
         service = self.calendar_service.get()
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params['timeMin'] = dt.utcnow().isoformat('T')
+        params['timeMin'] = dt.now().isoformat('T')
         params['calendarId'] = self.calendar_id
         if self.search:
             params['q'] = self.search

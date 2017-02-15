@@ -17,6 +17,7 @@ DEPENDENCIES = ['homematic']
 SENSOR_TYPES_CLASS = {
     "Remote": None,
     "ShutterContact": "opening",
+    "MaxShutterContact": "opening",
     "IPShutterContact": "opening",
     "Smoke": "smoke",
     "SmokeV2": "smoke",
@@ -53,11 +54,8 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         return bool(self._hm_get_state())
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
-        if not self.available:
-            return None
-
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         # If state is MOTION (RemoteMotion works only)
         if self._state == "MOTION":
             return "motion"

@@ -43,10 +43,11 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['zone']
+        self.hass.config.components = set(['zone'])
 
     def teardown_method(self, _):
         """Stop everything that was started."""
+        self.hass.stop()
         try:
             os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
         except FileNotFoundError:

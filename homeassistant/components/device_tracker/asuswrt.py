@@ -14,7 +14,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -70,10 +71,12 @@ _ARP_REGEX = re.compile(
 
 _IP_NEIGH_CMD = 'ip neigh'
 _IP_NEIGH_REGEX = re.compile(
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
-    r'\w+\s' +
-    r'\w+\s' +
-    r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s' +
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3}|'
+    r'([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{0,4}(:[0-9a-fA-F]{1,4}){1,7})\s'
+    r'\w+\s'
+    r'\w+\s'
+    r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
+    r'\s?(router)?'
     r'(?P<status>(\w+))')
 
 _NVRAM_CMD = 'nvram get client_info_tmp'
@@ -97,7 +100,7 @@ def get_scanner(hass, config):
 AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
 
 
-class AsusWrtDeviceScanner(object):
+class AsusWrtDeviceScanner(DeviceScanner):
     """This class queries a router running ASUSWRT firmware."""
 
     # Eighth attribute needed for mode (AP mode vs router mode)
@@ -322,6 +325,8 @@ class AsusWrtDeviceScanner(object):
 
         else:
             for lease in result.leases:
+                if lease.startswith(b'duid '):
+                    continue
                 match = _LEASES_REGEX.search(lease.decode('utf-8'))
 
                 if not match:

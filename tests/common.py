@@ -26,6 +26,7 @@ from homeassistant.components import sun, mqtt
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
+from homeassistant.util.async import run_callback_threadsafe
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +46,6 @@ def get_test_home_assistant():
 
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
-    # FIXME should not be a daemon. Means hass.stop() not called in teardown
     stop_event = threading.Event()
 
     def run_loop():
@@ -55,8 +55,6 @@ def get_test_home_assistant():
         loop.run_forever()
         loop.close()
         stop_event.set()
-
-    threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
 
     orig_start = hass.start
     orig_stop = hass.stop
@@ -75,6 +73,8 @@ def get_test_home_assistant():
 
     hass.start = start_hass
     hass.stop = stop_hass
+
+    threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
     return hass
 
@@ -108,8 +108,7 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        with patch.object(loop, 'add_signal_handler'), \
-                patch('homeassistant.core._async_create_timer'):
+        with patch('homeassistant.core._async_create_timer'):
             yield from orig_start()
 
     hass.async_start = mock_async_start
@@ -148,13 +147,20 @@ def mock_service(hass, domain, service):
     return calls
 
 
-def fire_mqtt_message(hass, topic, payload, qos=0):
+@ha.callback
+def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
-    hass.bus.fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
+    hass.bus.async_fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
         mqtt.ATTR_TOPIC: topic,
         mqtt.ATTR_PAYLOAD: payload,
         mqtt.ATTR_QOS: qos,
     })
+
+
+def fire_mqtt_message(hass, topic, payload, qos=0):
+    """Fire the MQTT message."""
+    run_callback_threadsafe(
+        hass.loop, async_fire_mqtt_message, hass, topic, payload, qos).result()
 
 
 def fire_time_changed(hass, time):
@@ -204,10 +210,10 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass):
+def mock_http_component(hass, api_password=None):
     """Mock the HTTP component."""
-    hass.http = MagicMock()
-    hass.config.components.append('http')
+    hass.http = MagicMock(api_password=api_password)
+    hass.config.components.add('http')
     hass.http.views = {}
 
     def mock_register_view(view):
@@ -223,7 +229,8 @@ def mock_http_component(hass):
 
 def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
-    hass.http = MagicMock(api_password=api_password)
+    if 'http' not in hass.config.components:
+        mock_http_component(hass, api_password)
     app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
@@ -389,6 +396,21 @@ def mock_coro(return_value=None):
     return coro
 
 
+def mock_generator(return_value=None):
+    """Helper method to return a coro generator that returns a value."""
+    return mock_coro(return_value)()
+
+
+def mock_coro_func(return_value=None):
+    """Helper method to return a coro that returns a value."""
+    @asyncio.coroutine
+    def coro(*args, **kwargs):
+        """Fake coroutine."""
+        return return_value
+
+    return coro
+
+
 @contextmanager
 def assert_setup_component(count, domain=None):
     """Collect valid configuration from setup_component.
@@ -399,7 +421,7 @@ def assert_setup_component(count, domain=None):
 
     Use as a context manager aroung bootstrap.setup_component
         with assert_setup_component(0) as result_config:
-            setup_component(hass, start_config, domain)
+            setup_component(hass, domain, start_config)
             # using result_config is optional
     """
     config = {}

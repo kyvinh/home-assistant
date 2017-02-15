@@ -8,7 +8,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_PLAY,
+    MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
@@ -30,14 +31,15 @@ YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
 
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | SUPPORT_PLAY
 
 NETFLIX_PLAYER_SUPPORT = \
-    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+    SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -153,8 +155,8 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         return "YouTube"
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
     @property
@@ -267,8 +269,8 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self._cur_track + 1
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         support = MUSIC_PLAYER_SUPPORT
 
         if self._cur_track > 0:
@@ -362,8 +364,8 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return self._source
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         support = NETFLIX_PLAYER_SUPPORT
 
         if self._cur_episode > 1:

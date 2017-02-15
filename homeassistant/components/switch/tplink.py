@@ -14,8 +14,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/GadgetReactor/pyHS100/archive/'
-                '45fc3548882628bcde3e3d365db341849457bef2.zip#pyHS100==0.2.2']
+REQUIREMENTS = ['pyHS100==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +66,7 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.is_on
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -85,7 +84,8 @@ class SmartPlugSwitch(SwitchDevice):
     def update(self):
         """Update the TP-Link switch's state."""
         try:
-            self._state = self.smartplug.state
+            self._state = self.smartplug.state == \
+                self.smartplug.SWITCH_STATE_ON
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()

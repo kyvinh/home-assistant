@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.0.6', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyhik==0.0.7', 'pydispatcher==2.0.5']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
@@ -29,7 +29,7 @@ DEFAULT_DELAY = 0
 
 ATTR_DELAY = 'delay'
 
-SENSOR_CLASS_MAP = {
+DEVICE_CLASS_MAP = {
     'Motion': 'motion',
     'Line Crossing': 'motion',
     'IO Trigger': None,
@@ -201,10 +201,10 @@ class HikvisionBinarySensor(BinarySensorDevice):
         return self._sensor_state()
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         try:
-            return SENSOR_CLASS_MAP[self._sensor]
+            return DEVICE_CLASS_MAP[self._sensor]
         except KeyError:
             # Sensor must be unknown to us, add as generic
             return None

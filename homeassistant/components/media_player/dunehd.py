@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
-    MediaPlayerDevice)
+    SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_PAUSED, STATE_ON, STATE_PLAYING)
 
@@ -28,7 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 DUNEHD_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_SELECT_SOURCE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PLAY
 
 
 # pylint: disable=unused-argument
@@ -96,8 +97,8 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         return list(self._sources.keys())
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return DUNEHD_PLAYER_SUPPORT
 
     def volume_up(self):

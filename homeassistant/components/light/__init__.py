@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import os
 import csv
@@ -26,7 +27,7 @@ from homeassistant.util.async import run_callback_threadsafe
 
 
 DOMAIN = "light"
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
 ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
@@ -34,7 +35,6 @@ ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # Bitfield of features supported by the light entity
-ATTR_SUPPORTED_FEATURES = 'supported_features'
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR_TEMP = 2
 SUPPORT_EFFECT = 4
@@ -84,7 +84,6 @@ PROP_TO_ATTR = {
     'white_value': ATTR_WHITE_VALUE,
     'effect_list': ATTR_EFFECT_LIST,
     'effect': ATTR_EFFECT,
-    'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
 # Service call validation schemas
@@ -253,7 +252,7 @@ def async_setup(hass, config):
             update_coro = hass.loop.create_task(
                 light.async_update_ha_state(True))
             if hasattr(light, 'async_update'):
-                update_tasks.append(hass.loop.create_task(update_coro))
+                update_tasks.append(update_coro)
             else:
                 yield from update_coro
 
@@ -363,8 +362,6 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
-        else:
-            data[ATTR_SUPPORTED_FEATURES] = self.supported_features
 
         return data
 

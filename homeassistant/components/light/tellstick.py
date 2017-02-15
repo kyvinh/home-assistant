@@ -80,9 +80,12 @@ class TellstickLight(TellstickDevice, Light):
         else:
             self._state = False
 
-    def _send_tellstick_command(self):
-        """Let tellcore update the device to match the current state."""
-        if self._state:
+    def _send_device_command(self, requested_state, requested_data):
+        """Let tellcore update the actual device to the requested state."""
+        if requested_state:
+            if requested_data is not None:
+                self._brightness = int(requested_data)
+
             self._tellcore_device.dim(self._brightness)
         else:
             self._tellcore_device.turn_off()
