@@ -40,17 +40,21 @@ class APIAIWebhookView(HomeAssistantView):
         body = yield from request.text()
         result = {}
 
-        """Format of webhook JSON request: https://docs.api.ai/docs/query#response"""
-        data = json.loads(body) if body else None
 
         # TODO Catch AttributeError: 'NoneType' object has no attribute 'get'
         #      in case there was a problem with the JSON response
 
         changed_states = []
 
+        """ Parsing from api.ai would be: (with format of webhook JSON request: https://docs.api.ai/docs/query#response )
+        data = json.loads(body) if body else None
         action = data.get('result').get('action')
+        scene_to_activate = data.get('result').get('parameters').get('scene')
+        """
+        action = 'scene.activate'
+        scene_to_activate = body.replace(" ", "").lower()
+
         if action == 'scene.activate':
-            scene_to_activate = data.get('result').get('parameters').get('scene')
             _LOGGER.info('Activating scene: %s', scene_to_activate)
             if scene_to_activate:
                 result['speech'] = "Activating scene: {}".format(scene_to_activate)
