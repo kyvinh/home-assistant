@@ -19,13 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Register the API with the HTTP interface."""
+    """ Register the API with the HTTP interface."""
     hass.http.register_view(APIAIWebhookView)
     return True
 
 
 class APIAIWebhookView(HomeAssistantView):
-    """View to handle API.AI webhook requests."""
+    """ View to handle API.AI webhook requests."""
 
     url = "/api_ai/webhook"
     name = "api_ai:webhook"
@@ -54,7 +54,19 @@ class APIAIWebhookView(HomeAssistantView):
         action = 'scene.activate'
         scene_to_activate = body.replace(" ", "").lower()
 
-        if action == 'scene.activate':
+        if scene_to_activate == 'computer' or scene_to_activate == 'chromecast' or scene_to_activate == 'playstation':
+            """ Override scene_to_activate and activate select option """
+            _LOGGER.info('Activating select option: %s', scene_to_activate)
+            if scene_to_activate == 'computer':
+                scene_to_activate = 'NUC'
+            elif scene_to_activate == 'chromecast':
+                scene_to_activate = 'Chromecast'
+            elif scene_to_activate == 'playstation':
+                scene_to_activate = 'PS4'
+
+            yield from hass.services.async_call('input_select', 'select_option', {ATTR_ENTITY_ID: 'input_select.projector_source', option: scene_to_activate}, True)
+
+        elif action == 'scene.activate':
             _LOGGER.info('Activating scene: %s', scene_to_activate)
             if scene_to_activate:
                 result['speech'] = "Activating scene: {}".format(scene_to_activate)
@@ -63,6 +75,7 @@ class APIAIWebhookView(HomeAssistantView):
                         'scene', SERVICE_TURN_ON, {ATTR_ENTITY_ID: 'scene.' + scene_to_activate}, True)
             else:
                 _LOGGER.warning('Could not process api.ai request: scene.activate called without scene name')
+
         elif action == 'appliance.turn_on':
             appliance = data.get('result').get('parameters').get('appliance')
             _LOGGER.info('Turning on appliance: %s', appliance)
