@@ -17,6 +17,7 @@ DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_OPTION = 'option'
 
 def setup(hass, config):
     """ Register the API with the HTTP interface."""
@@ -64,7 +65,7 @@ class APIAIWebhookView(HomeAssistantView):
             elif scene_to_activate == 'playstation':
                 scene_to_activate = 'PS4'
 
-            yield from hass.services.async_call('input_select', 'select_option', {ATTR_ENTITY_ID: 'input_select.projector_source', option: scene_to_activate}, True)
+            yield from hass.services.async_call('input_select', 'select_option', {ATTR_ENTITY_ID: 'input_select.projector_source', ATTR_OPTION: scene_to_activate}, True)
 
         elif action == 'scene.activate':
             _LOGGER.info('Activating scene: %s', scene_to_activate)
